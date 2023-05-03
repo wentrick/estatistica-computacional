@@ -1,16 +1,47 @@
-pacman::p_load(readr,tidyverse,stringr,future,foreach,doParallel,parallel)
+---
+title: "Lista 1 Estatistica Computacional"
+author: "Davi Wentrick Feijó - 200016806"
+date: "2023-05-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(readr,tidyverse,stringr,future,foreach,doParallel,parallel,formatR)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 options(scipen = 999, digits = 12)
 set.seed(050701)
 library(dplyr)
+```
+
+### Questão 1
+
+a) Estime via simulação computacional (Monte Carlo) a probabilidade de se gerar uma palavra válida (isso é, do dicionário) ao sortear ao acaso sequências de 5 letras (todas com a mesma probabilidade). Em seguida, calcule analiticamente tal probabilidade e faça um gráfico indicando se a estimativa obtida se aproxima do valor teórico conforme a amostra aumenta. Atenção: utilize somente as letras do alfabeto sem carateres especiais.
+
+
+```{r include=FALSE}
 ##### Questao 1A ----
-dicionario_ptbr <- as.data.frame(read_csv("dados/Dicionario.txt"))
+dicionario_ptbr <- as.data.frame(read_csv("Dicionario.txt"))
 colnames(dicionario_ptbr) = c("palavras")
 
 dicionario_ptbr = dicionario_ptbr %>%
   mutate(tamanho = nchar(palavras)) %>%
   filter(tamanho == 5)
   tolower(dicionario_ptbr$palavras)
+```
 
+```{r eval=FALSE, include=TRUE}
+##### Questao 1A ----
+dicionario_ptbr <- as.data.frame(read_csv("Dicionario.txt"))
+colnames(dicionario_ptbr) = c("palavras")
+
+dicionario_ptbr = dicionario_ptbr %>%
+  mutate(tamanho = nchar(palavras)) %>%
+  filter(tamanho == 5)
+  tolower(dicionario_ptbr$palavras)
+```
+
+```{r}
 #criando uma funcao para gerar as palavras e comparar elas
 criar_palavras_aleatorias <- function(lista_palavras, n_amostras) {
   # Cria um vetor com todas as letras do alfabeto
@@ -38,12 +69,17 @@ start = Sys.time()
 # Chama a função para gerar 100 amostras aleatórias e verificar quantas correspondem à lista de palavras
 correspondencias_total <- criar_palavras_aleatorias(palavras, 300000)
 finish = Sys.time()
+```
 
+
+```{r echo=FALSE}
 cat("tempo =", finish-start)
 # Imprime o número total de correspondências encontradas
-cat("Total de correspondências encontradas:", correspondencias_total/300000)
+cat("Total de correspondências encontradas:",correspondencias_total,"a probabilidade é de:", correspondencias_total/300000)
+```
+Podemos rodar essa simulacao varias vezes e verificar o resultado obtido!
 
-###############################################################################
+```{r}
 #paralelizando o loop da funcao
 # Especificando o número de núcleos a serem usados
 n_cores <- 23
@@ -60,18 +96,30 @@ matches <- foreach(n = 1:y, .combine = "mean") %dopar% {
 }
 
 finish = Sys.time()
+```
 
+
+```{r echo=FALSE}
 cat("tempo =", finish-start)
+```
 
+
+```{r}
 # Fechando a conexão com os núcleos
 stopCluster(cl)
+```
 
+
+```{r echo=FALSE}
 # Imprime o número total de correspondências encontradas
-cat("A probabilidade estimada a partir de uma media da quantiade de palvras validas encontradas de",y,"simulacoes gerando",x,"palvras aleatorias cada é:", matches/x, "\n")
-cat("A probabilidade exata de se gerar uma palvra aleatoria de 5 letras e ela existir é:",5481/26^5)
+cat("A probabilidade estimada a partir de uma media da quantiade de palvras validas encontradas de",y,"\n","simulacoes gerando",x,"palvras aleatorias cada é:", matches/x, "\n")
+cat("A probabilidade exata de se gerar uma palvra aleatoria de 5 letras e ela existir é:","\n",5481/26^5)
+```
 
-##### Questao 1B ----
+\newpage
+b) Estime a probabilidade da sequência gerada ser um palíndromo (ou seja, pode ser lida, indiferentemente, da esquerda para direita ou da direita para esquerda). Compare o resultado com a probabilidade exata, calculada analiticamente.
 
+```{r}
 criar_palavras_aleatorias_palindromas <- function(n_amostras) {
   # Cria um vetor com todas as letras do alfabeto
   alfabeto <- letters
@@ -99,11 +147,17 @@ criar_palavras_aleatorias_palindromas <- function(n_amostras) {
 
 # Chama a função para gerar 100000 amostras aleatórias e estimar a probabilidade de gerar uma palavra palíndroma
 prob_palindromo <- criar_palavras_aleatorias_palindromas(100000)
+```
+
+
+```{r}
 cat("Probabilidade de gerar uma palavra palíndroma:", prob_palindromo)
+```
 
+\newpage
+c) Construa um gerador que alterne entre consoantes e vogais (se uma letra for uma vogal, a próxima será uma consoante e vice-versa). Qual a probabilidade de gerar uma palavra válida com este novo gerador?
 
-##### Questao 1C ----
-
+```{r}
 criar_palavras_aleatorias_vogal_consoante <- function(lista_palavras, n_amostras) {
   # Cria um vetor com todas as letras do alfabeto
   vogais <- c("a", "e", "i", "o", "u")
@@ -139,13 +193,19 @@ start = Sys.time()
 # Chama a função para gerar 100 amostras aleatórias e verificar quantas correspondem à lista de palavras
 correspondencias_total <- criar_palavras_aleatorias_vogal_consoante(palavras, 300000)
 finish = Sys.time()
+```
 
+
+```{r echo=FALSE}
 cat("tempo =", finish-start)
 # Imprime o número total de correspondências encontradas
 cat("Total de correspondências encontradas:",correspondencias_total,"a probabilidade estimada é:", correspondencias_total/300000)
+```
 
-##### Questao 1D ----
+\newpage
+d) Considere um processo gerador de sequências de 5 caracteres no qual cada letra é sorteada com probabilidade proporcional à sua respectiva frequência na língua portuguesa (veja essa página). Suponha que esse processo gerou uma sequência com ao menos um “a”. Neste caso, estime a probabilidade dessa sequência ser uma palavra válida. Dica: Use a função sample e edite o parâmetro prob. Para pensar: Você consegue calcular essa probabilidade analiticamente? (Não precisa responder.)
 
+```{r}
 criar_palavras_aleatorias <- function(lista_palavras, n_amostras) {
   # Cria um vetor com todas as letras do alfabeto
   alfabeto <- letters
@@ -175,13 +235,28 @@ start = Sys.time()
 # Chama a função para gerar 100 amostras aleatórias e verificar quantas correspondem à lista de palavras
 correspondencias_total <- criar_palavras_aleatorias(palavras, 300000)
 finish = Sys.time()
+```
 
+
+```{r echo=FALSE}
 cat("tempo =", finish-start)
 # Imprime o número total de correspondências encontradas
-cat("Total de correspondências encontradas:", correspondencias_total/300000)
+cat("Probabilidade estimada:", correspondencias_total/300000)
 
-##### Questao 2A ----
+```
 
+\newpage
+### Questão 2
+
+a) Escreva uma função que gere, a partir do método da transformada integral, uma amostra aleatória de tamanho n da distribuição Cauchy para n e $\gamma$ arbitrários. A densidade da Cauchy($\gamma$) é dada por
+
+
+$$
+f(x) = \frac{1}{\pi\gamma(1 + (x/\gamma)^2)}
+$$
+
+
+```{r}
 cauchy_sample <- function(n, gamma, x0=0) {
   # gerar n variáveis aleatórias uniformes no intervalo [0,1]
   u <- runif(n)
@@ -192,12 +267,33 @@ cauchy_sample <- function(n, gamma, x0=0) {
 
 
 x <- cauchy_sample(1000, 1, 0)
-
-
 hist(x,xlim = c(-10, 10), breaks = seq(-1000, 1000, 0.4))
-##### Questao 2B ----
-  
+```
 
+\newpage
+b) Uma variável aleatória discreta X tem função massa de probabilidade
+
+$$
+p(2) = 0.2 
+$$
+$$
+p(3) = 0.1 
+$$
+$$
+p(5) = 0.2 
+$$
+$$
+p(7) = 0.2 
+$$
+$$
+p(9) = 0.3
+$$
+
+Use o método de transformação inversa para gerar uma amostra aleatória de tamanho 1000 a partir da distribuição de X. Construa uma tabela de frequência relativa e compare as probabilidades empíricas com as teóricas. Repita usando a função sample do R.
+
+
+```{r}
+#função de distribuição acumulada inversa (ICDF)
 icdf <- function(u) {
   ifelse(u <= 0.2, 2,
          ifelse(u <= 0.3, 3,
@@ -212,19 +308,32 @@ u <- runif(1000)
 x <- icdf(u)
 
 
-tabela_emp <- table(x) / 1000
-tabela_teo <- c(0.2, 0.1, 0.2, 0.2, 0.3)
-names(tabela_emp) <- c(2, 3, 5, 7, 9)
-names(tabela_teo) <- c(2, 3, 5, 7, 9)
+tabela_ICDF <- table(x) / 1000
+tabela_teorica <- c(0.2, 0.1, 0.2, 0.2, 0.3)
+names(tabela_ICDF) <- c(2, 3, 5, 7, 9)
+names(tabela_teorica) <- c(2, 3, 5, 7, 9)
 
 #comparando com a funcao sample do R 
 X2 <- sample(c(2, 3, 5, 7, 9), 1000, prob = c(0.2, 0.1, 0.2, 0.2, 0.3),replace = TRUE)
 
-tabela_emp2 <- table(X2)/1000
+tabela_sample <- table(X2)/1000
 
-rbind(tabela_teo,tabela_emp,tabela_emp2)
+rbind(tabela_teorica,tabela_ICDF,tabela_sample)
+```
 
-##### Questao 2C ----
+
+\newpage
+
+c) Escreva uma função que gere amostras da distribuição Normal padrão ($\mu$ = 0, $\sigma$ = 1) usando o método de aceitação e rejeição adotando como função geradora de candidatos, $g(x)$, a distribuição Cauchy padrão (isso é, com $\gamma = 1$).
+
+A constante c é definida como a razão entre a constante de normalização da distribuição Normal e a função densidade de probabilidade da distribuição Cauchy no ponto de máximo. Assim, a constante c pode ser calculada como:
+
+$$
+c = C(f) / g(0) = sqrt(2/e)
+$$
+Onde $C(f) = 1/sqrt(2*pi)$ é a constante de normalizacao da normal e $g(0) = (1/pi)$ é a função densidade de probabilidade da distribuição Cauchy no ponto de máximo
+
+```{r}
 gerar_amostra_normal_aceitacao_rejeicao <- function(n) {
   f <- function(x) dnorm(x)
   g <- function(x) dcauchy(x)
@@ -249,3 +358,28 @@ gerar_amostra_normal_aceitacao_rejeicao <- function(n) {
 amostras <- gerar_amostra_normal_aceitacao_rejeicao(1000)
 
 hist(amostras)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
