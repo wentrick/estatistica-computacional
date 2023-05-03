@@ -1,6 +1,6 @@
 pacman::p_load(readr,tidyverse,stringr,future,foreach,doParallel,parallel)
 options(scipen = 999, digits = 12)
-set.seed(050701)
+#set.seed(050701)
 library(dplyr)
 ##### Questao 1A ----
 dicionario_ptbr <- as.data.frame(read_csv("dados/Dicionario.txt"))
@@ -46,7 +46,7 @@ cat("Total de correspondências encontradas:", correspondencias_total/300000)
 ###############################################################################
 #paralelizando o loop da funcao
 # Especificando o número de núcleos a serem usados
-n_cores <- 23
+n_cores <- detectCores() - 1
 cl <- makeCluster(n_cores)
 x = 100000 #numero de palvras geradas
 y = 100 #numero de loops dessa simulacao
@@ -116,7 +116,7 @@ criar_palavras_aleatorias_vogal_consoante <- function(lista_palavras, n_amostras
     # Gera uma amostra aleatória de 5 letras do alfabeto
     palavra <- character(5) # inicializa um vetor vazio com 10 espaços
     for (n in 1:5) {
-      if (n %% 2 == 0) { # se o índice for par, sorteia uma consoante
+      if (n %% 2 == 0) { # se o índice for par, sorteia uma consoante (eu nao levei em consideracao a opcao de ser indice impar, ou seja começar com uma voga ou cmeçar com uma consoante)
         letra <- sample(consoantes, 1)
       } else { # senão, sorteia uma vogal
         letra <- sample(vogais, 1)
@@ -179,6 +179,8 @@ finish = Sys.time()
 cat("tempo =", finish-start)
 # Imprime o número total de correspondências encontradas
 cat("Total de correspondências encontradas:", correspondencias_total/300000)
+
+#o objetivo era pra fazer um loop while enquanto 
 
 ##### Questao 2A ----
 
@@ -246,6 +248,8 @@ gerar_amostra_normal_aceitacao_rejeicao <- function(n) {
   return(amostras)
 }
 
-amostras <- gerar_amostra_normal_aceitacao_rejeicao(1000)
+amostras <- gerar_amostra_normal_aceitacao_rejeicao(10000)
 
 hist(amostras)
+
+
